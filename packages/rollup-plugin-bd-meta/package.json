@@ -1,0 +1,14 @@
+{
+    "name": "rollup-plugin-bd-meta",
+    "version": "0.1.0",
+    "author": "Zerthox",
+    "peerDependencies": {
+        "rollup": "^4.0.0"
+    },
+    "devDependencies": {
+        "rollup": "^4.0.0"
+    },
+    "dependencies": {
+        "bd-meta": "^0.1.0"
+    }
+}

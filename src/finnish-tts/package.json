@@ -1,0 +1,9 @@
+{
+    "name": "finnish-tts",
+    "author": "Mikael Malmi",
+    "version": "1.0.0",
+    "description": "Finnish TTS Event Notifications",
+    "dependencies": {
+        "dium": "*"
+    }
+}
