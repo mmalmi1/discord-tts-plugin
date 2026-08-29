@@ -1,6 +1,6 @@
-import {Finder} from "../api";
-import type {Snowflake, ActionModule} from "./general";
-import type {Store} from "./flux";
+import { Finder } from "../api";
+import type { Snowflake, ActionModule } from "./general";
+import type { Store } from "./flux";
 
 /** A Channel. */
 export interface Channel {
@@ -26,12 +26,15 @@ export interface Channel {
     originChannelId?: Snowflake;
     ownerId?: Snowflake;
 
-    permissionOverwrites: Record<Snowflake, {
-        type: number;
-        id: Snowflake;
-        allow: Permissions;
-        deny: Permissions;
-    }>;
+    permissionOverwrites: Record<
+        Snowflake,
+        {
+            type: number;
+            id: Snowflake;
+            allow: Permissions;
+            deny: Permissions;
+        }
+    >;
 
     position: number;
     lastMessageId: Snowflake;
@@ -86,42 +89,42 @@ export const enum ChannelTypes {
     PrivateThread = 12,
     GuildStageVoice = 13,
     GuildDirectory = 14,
-    GuildForum = 15
+    GuildForum = 15,
 }
 
 export interface ChannelStore extends Store {
-    getAllThreadsForParent(e);
-    getBasicChannel(e);
-    getCachedChannelJsonForGuild(e);
+    getAllThreadsForParent(e: any): any;
+    getBasicChannel(e: any): any;
+    getCachedChannelJsonForGuild(e: any): any;
     getChannel(id: Snowflake): Channel;
-    getDMFromUserId(e);
-    getDMUserIds();
-    getGuildChannelsVersion(e);
-    getInitialOverlayState();
-    getMutableBasicGuildChannelsForGuild(e);
-    getMutableGuildChannelsForGuild(e);
-    getMutablePrivateChannels();
-    getPrivateChannelsVersion();
-    getSortedPrivateChannels();
-    hasChannel(e);
-    hasRestoredGuild(e);
-    loadAllGuildAndPrivateChannelsFromDisk();
-    __getLocalVars();
+    getDMFromUserId(e: any): any;
+    getDMUserIds(): any;
+    getGuildChannelsVersion(e: any): any;
+    getInitialOverlayState(): any;
+    getMutableBasicGuildChannelsForGuild(e: any): any;
+    getMutableGuildChannelsForGuild(e: any): any;
+    getMutablePrivateChannels(): any;
+    getPrivateChannelsVersion(): any;
+    getSortedPrivateChannels(): any;
+    hasChannel(e: any): any;
+    hasRestoredGuild(e: any): any;
+    loadAllGuildAndPrivateChannelsFromDisk(): any;
+    __getLocalVars(): any;
 }
 
 export const ChannelStore: ChannelStore = /* @__PURE__ */ Finder.byName("ChannelStore");
 
-export const ChannelActions: ActionModule = /* @__PURE__ */ Finder.byKeys(["selectChannel"]);
+export const ChannelActions: ActionModule = /* @__PURE__ */ Finder.byKeys(["selectChannel"], { entries: true });
 
 export interface SelectedChannelStore extends Store {
-    getChannelId(e);
-    getCurrentlySelectedChannelId(e);
-    getLastChannelFollowingDestination();
+    getChannelId(e: any): any;
+    getCurrentlySelectedChannelId(e: any): any;
+    getLastChannelFollowingDestination(): any;
     getLastSelectedChannelId(e?: any): Snowflake;
-    getLastSelectedChannels(e);
-    getMostRecentSelectedTextChannelId(e);
+    getLastSelectedChannels(e: any): any;
+    getMostRecentSelectedTextChannelId(e: any): any;
     getVoiceChannelId(): Snowflake;
-    __getLocalVars();
+    __getLocalVars(): any;
 }
 
 export const SelectedChannelStore: SelectedChannelStore = /* @__PURE__ */ Finder.byName("SelectedChannelStore");

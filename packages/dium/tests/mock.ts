@@ -1,17 +1,17 @@
 import React from "react";
-import Reconciler, {Fiber} from "react-reconciler";
-import {DefaultEventPriority, LegacyRoot} from "react-reconciler/constants";
+import Reconciler, { type Fiber } from "react-reconciler";
+import { DefaultEventPriority, LegacyRoot } from "react-reconciler/constants";
 
 (global as any).TESTING = true;
 
 (global as any).BdApi = {
     React,
     Webpack: {
-        getModule: () => null
+        getModule: () => null,
     },
     Plugins: {
-        get: () => ({})
-    }
+        get: () => ({}),
+    },
 };
 
 const reconciler = Reconciler({
@@ -22,7 +22,7 @@ const reconciler = Reconciler({
     appendInitialChild() {},
     finalizeInitialChildren: () => false,
     shouldSetTextContent: () => false,
-    getRootHostContext: () => null,
+    getRootHostContext: () => ({}),
     getChildHostContext: (parent) => parent,
     getPublicInstance: (instance) => instance,
     prepareForCommit: () => null,
@@ -61,11 +61,23 @@ const reconciler = Reconciler({
     preloadInstance: () => true,
     startSuspendingCommit() {},
     suspendInstance() {},
-    waitForCommitToBeReady: () => null
+    waitForCommitToBeReady: () => null,
 });
 
 export const createFiber = (element: React.ReactElement<any>): Fiber => {
-    const root = reconciler.createContainer({}, LegacyRoot, null, false, false, "", console.error, null);
+    const root = reconciler.createContainer(
+        {},
+        LegacyRoot,
+        null,
+        false,
+        false,
+        "",
+        console.error,
+        console.warn,
+        console.error,
+        () => {},
+        null,
+    );
     (reconciler as any).updateContainerSync(element, root);
     (reconciler as any).flushSyncWork();
     return root.current;

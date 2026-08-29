@@ -1,11 +1,11 @@
 import path from "path";
-import {promises as fs} from "fs";
+import { promises as fs } from "fs";
 import camelCase from "lodash.camelcase";
 import upperFirst from "lodash.upperfirst";
-import type {PackageJson} from "type-fest";
-import type {Meta} from "betterdiscord";
+import type { PackageJson } from "type-fest";
+import type { Meta } from "betterdiscord";
 
-export type {Meta} from "betterdiscord";
+export type { Meta } from "betterdiscord";
 
 export interface PackageWithMeta extends PackageJson.PackageJsonStandard {
     meta?: Partial<Meta>;
@@ -14,7 +14,6 @@ export interface PackageWithMeta extends PackageJson.PackageJsonStandard {
 export async function resolvePkg(dir: string): Promise<string> {
     let current = path.resolve(dir);
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         try {
             const file = path.join(dir, "package.json");
@@ -26,27 +25,31 @@ export async function resolvePkg(dir: string): Promise<string> {
             if (parent != current) {
                 current = parent;
             } else {
-                break;
+                throw new Error("package.json not found");
             }
         }
     }
-    return undefined;
 }
 
 export interface Options {
     authorGithub?: boolean;
 }
 
-export async function readMetaFromPkg(file: string, {authorGithub = false}: Options = {}): Promise<Meta> {
+export async function readMetaFromPkg(file: string, { authorGithub = false }: Options = {}): Promise<Meta> {
     const pkg = JSON.parse(await fs.readFile(file, "utf8")) as PackageWithMeta;
     return {
         name: upperFirst(camelCase(pkg.name)),
-        version: pkg.version,
-        author: typeof pkg.author === "string" ? pkg.author : pkg.author.name,
-        authorLink: typeof pkg.author === "object" ? pkg.author.url : (authorGithub ? `https://github.com/${pkg.author}` : undefined),
-        description: pkg.description,
+        version: pkg.version ?? "0.1.0",
+        author: typeof pkg.author === "string" ? pkg.author : (pkg.author?.name ?? ""),
+        authorLink:
+            typeof pkg.author === "object"
+                ? pkg.author.url
+                : authorGithub
+                  ? `https://github.com/${pkg.author}`
+                  : undefined,
+        description: pkg.description ?? "",
         website: pkg.homepage,
-        ...pkg.meta
+        ...pkg.meta,
     };
 }
 

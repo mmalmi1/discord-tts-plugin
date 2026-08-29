@@ -1,4 +1,22 @@
-import {Finder, Filters} from "../api";
+import { Finder } from "../api";
+
+export type FormNoticeType = "BRAND" | "CUSTOM" | "DANGER" | "PRIMARY" | "SUCCESS" | "WARNING";
+
+export interface FormNoticeProps {
+    type?: string;
+    body?: React.ReactNode;
+    title?: React.ReactNode;
+    button?: any;
+    imageData?: any;
+    className?: string;
+    iconClassName?: string;
+    style?: React.CSSProperties;
+    align?: string;
+}
+
+export interface FormNotice extends React.FunctionComponent<FormNoticeProps> {
+    Types: Record<FormNoticeType, string>;
+}
 
 export const enum FormTags {
     H1 = "h1",
@@ -7,53 +25,103 @@ export const enum FormTags {
     H4 = "h4",
     H5 = "h5",
     LABEL = "label",
-    LEGEND = "legend"
+    LEGEND = "legend",
 }
+
+export interface FormItemProps {
+    tag?: string;
+    title?: any;
+    error?: any;
+    disabled?: boolean;
+    required?: boolean;
+    errorMessage?: any;
+    children?: React.ReactNode;
+    className?: string;
+    titleClassName?: string;
+    style?: React.CSSProperties;
+}
+
+export type FormItem = React.FunctionComponent<FormItemProps>;
+
+export const FormItem: FormItem = /* @__PURE__ */ Finder.bySource(["titleClassName:", "required:"], { entries: true });
+
+export interface FormTitleProps {
+    title: string;
+    subtitle?: string;
+    decoration?: any;
+    subtitleDecoration?: any;
+    persistentBadge?: any;
+}
+
+export type FormTitle = React.FunctionComponent<FormTitleProps>;
+
+export interface FormControlProps {
+    id?: any;
+    errorMessage?: string;
+    helperText?: string;
+    successMessage?: string;
+    description?: string;
+    label?: string;
+    hideLabel?: boolean;
+    required?: boolean;
+    disabled?: boolean;
+    children?: React.ReactNode;
+    role?: string;
+    layout?: string;
+    layoutConfig?: any;
+    badge?: any;
+    icon?: any;
+    interactiveLabel?: boolean;
+    auxiliaryContentPosition?: string;
+    trailingAuxiliaryContent?: any;
+    ref?: any;
+}
+
+export interface FormSwitchProps extends Omit<
+    FormControlProps,
+    "disabled" | "layoutConfig" | "trailingAuxiliaryContent" | "children"
+> {
+    checked?: boolean;
+    displayOnly?: boolean;
+    onChange?: (checked: boolean) => void;
+    focusProp?: any;
+    hasIcon?: boolean;
+}
+
+export type FormSwitch = React.FunctionComponent<FormSwitchProps>;
+
+export const FormSwitch: FormSwitch = /* @__PURE__ */ Finder.bySource(["checked:", "onChange:", "layout:"], {
+    entries: true,
+});
+
+export interface FormDividerProps {
+    className?: string;
+    gap?: string | number;
+}
+
+export type FormDivider = React.FunctionComponent<FormDividerProps>;
+
+export const FormDivider: FormDivider = /* @__PURE__ */ Finder.bySource(
+    ["marginTop:", (source) => /{className:.,gap:.}=/.test(source)],
+    {
+        entries: true,
+    },
+);
 
 export interface FormSectionProps {
     children?: React.ReactNode;
     className?: string;
-    titleClassName?: string;
     title?: React.ReactNode;
-    icon?: any;
     disabled?: boolean;
     htmlFor?: any;
     tag?: string;
 }
 
-export interface FormSection extends React.FunctionComponent<FormSectionProps> {
-    Tags: typeof FormTags;
-}
+export type FormSection = React.FunctionComponent<FormSectionProps>;
 
-export interface FormItemProps {
-    children?: React.ReactNode;
-    disabled?: boolean;
-    className?: string;
-    titleClassName?: string;
-    tag?: string;
-    required?: boolean;
-    style?: React.CSSProperties;
-    title?: any;
-    error?: any;
-}
-
-export interface FormItem extends React.FunctionComponent<FormItemProps> {
-    Tags: typeof FormTags;
-}
-
-export interface FormTitleProps {
-    tag?: string;
-    children?: React.ReactNode;
-    className?: string;
-    faded?: boolean;
-    disabled?: boolean;
-    required?: boolean;
-    error?: any;
-}
-
-export interface FormTitle extends React.FunctionComponent<FormTitleProps> {
-    Tags: typeof FormTags;
-}
+export const FormSection: FormSection = /* @__PURE__ */ Finder.bySource(["children:", "title:", "description:"], {
+    entries: true,
+});
 
 export interface FormTextProps {
     type?: string;
@@ -65,88 +133,15 @@ export interface FormTextProps {
 }
 
 export const enum FormTextTypes {
-    INPUT_PLACEHOLDER = "placeholder",
+    DEFAULT = "default",
     DESCRIPTION = "description",
-    LABEL_BOLD = "labelBold",
-    LABEL_SELECTED = "labelSelected",
-    LABEL_DESCRIPTOR = "labelDescriptor",
-    ERROR = "error",
-    SUCCESS = "success"
 }
 
-export interface FormText extends React.FunctionComponent<FormTextProps> {
-    Types: typeof FormTextTypes;
-}
+export type FormText = React.FunctionComponent<FormTextProps>;
 
-export interface FormSwitchProps {
-    value?: boolean;
-    disabled?: boolean;
-    hideBorder?: boolean;
-    tooltipNote?: any;
-    onChange?: (checked: boolean) => void;
-    className?: string;
-    style?: React.CSSProperties;
-    note?: any;
-    helpdeskArticleId?: any;
-    children?: React.ReactNode;
-}
-
-export const enum FormNoticeTypes {
-    BRAND = "cardBrand",
-    CUSTOM = "card",
-    DANGER = "cardDanger",
-    PRIMARY = "cardPrimary",
-    SUCCESS = "cardSuccess",
-    WARNING = "cardWarning"
-}
-
-export interface FormNoticeProps {
-    type?: string;
-    imageData?: {
-        src: string;
-        height?: number;
-        width?: number;
-        position?: "left" | "right";
-    };
-    button?: any;
-    className?: string;
-    iconClassName?: string;
-    title?: React.ReactNode;
-    body?: React.ReactNode;
-    style?: React.CSSProperties;
-    align?: string;
-}
-
-export interface FormNotice extends React.FunctionComponent<FormNoticeProps> {
-    Types: typeof FormNoticeTypes;
-}
-
-interface FormComponents {
-    FormSection: FormSection;
-    FormItem: FormItem;
-    FormTitle: FormTitle;
-    FormText: FormText;
-    // FormLabel: React.FunctionComponent<any>;
-    FormDivider: React.FunctionComponent<any>;
-    FormSwitch: React.FunctionComponent<FormSwitchProps>;
-    FormNotice: FormNotice;
-}
-
-export const {
-    FormSection,
-    FormItem,
-    FormTitle,
-    FormText,
-    // FormLabel,
-    FormDivider,
-    FormSwitch,
-    FormNotice
-}: FormComponents = /* @__PURE__ */ Finder.demangle({
-    FormSection: Filters.bySource("titleClassName:", ".sectionTitle"),
-    FormItem: Filters.bySource("titleClassName:", "required:"),
-    FormTitle: Filters.bySource("faded:", "required:"),
-    FormText: (target) => target.Types?.INPUT_PLACEHOLDER,
-    FormDivider: Filters.bySource(".divider", "style:"),
-    FormSwitch: Filters.bySource("tooltipNote:"),
-    FormNotice: Filters.bySource("imageData:", ".formNotice")
-} as const, ["FormSection", "FormItem", "FormDivider"]);
+export const FormText: FormText = /* @__PURE__ */ Finder.bySource(
+    ["type:", "style:", "disabled:", "variant:", ".DEFAULT"],
+    {
+        entries: true,
+    },
+);

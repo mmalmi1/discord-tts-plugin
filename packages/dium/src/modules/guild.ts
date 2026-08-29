@@ -1,6 +1,6 @@
-import {Finder} from "../api";
-import type {Snowflake, ActionModule} from ".";
-import type {Store, SnapshotStore} from "./flux";
+import { Finder } from "../api";
+import type { Snowflake, ActionModule } from ".";
+import type { Store, SnapshotStore } from "./flux";
 
 /** A Guild (server). */
 export interface Guild {
@@ -119,12 +119,12 @@ export const GuildStore: GuildStore = /* @__PURE__ */ Finder.byName("GuildStore"
 export const GuildActions: ActionModule = /* @__PURE__ */ Finder.byKeys(["requestMembers"]);
 
 export interface GuildMemberStore extends Store {
-    getCommunicationDisabledUserMap();
-    getCommunicationDisabledVersion();
+    getCommunicationDisabledUserMap(): any;
+    getCommunicationDisabledVersion(): any;
     getMember(guild: Snowflake, user: Snowflake): Member;
     getMemberIds(guild: Snowflake): Snowflake[];
     getMembers(guild: Snowflake): Member[];
-    getMutableAllGuildsAndMembers();
+    getMutableAllGuildsAndMembers(): any;
     getNick(guild: Snowflake, user: Snowflake): string;
     getNicknameGuildsMapping(user: Snowflake): Record<string, Snowflake[]>;
     getNicknames(user: Snowflake): string[];
@@ -170,17 +170,17 @@ export interface GuildsTree {
     version: number;
     get size(): number;
 
-    addNode(node: GuildsTreeNodeBase);
+    addNode(node: GuildsTreeNodeBase): any;
     allNodes(): GuildsTreeNode[];
-    convertToFolder(node: GuildsTreeNodeBase);
-    getNode(nodeId: number);
+    convertToFolder(node: GuildsTreeNodeBase): any;
+    getNode(nodeId: number): any;
     getRoots(): GuildsTreeNode[];
-    moveInto(node: GuildsTreeNodeBase, parent: GuildsTreeNodeBase);
-    moveNextTo(node: GuildsTreeNodeBase, sibling: GuildsTreeNodeBase);
-    removeNode(node: GuildsTreeNodeBase);
-    replaceNode(node: GuildsTreeNodeBase, toReplace: GuildsTreeNode);
+    moveInto(node: GuildsTreeNodeBase, parent: GuildsTreeNodeBase): any;
+    moveNextTo(node: GuildsTreeNodeBase, sibling: GuildsTreeNodeBase): any;
+    removeNode(node: GuildsTreeNodeBase): any;
+    replaceNode(node: GuildsTreeNodeBase, toReplace: GuildsTreeNode): any;
     sortedGuildNodes(): GuildsTreeGuild[];
-    _pluckNode(node: GuildsTreeNodeBase);
+    _pluckNode(node: GuildsTreeNodeBase): any;
 }
 
 export interface GuildFolder {
@@ -219,9 +219,10 @@ export interface DeprecatedSortedGuild {
 
 export interface ExpandedGuildFolderStore extends Store {
     getExpandedFolders(): Set<number>;
-    getState(): {expandedFolders: number[]};
+    getState(): { expandedFolders: number[] };
     isFolderExpanded(folderId: number): boolean;
     __getLocalVars(): any;
 }
 
-export const ExpandedGuildFolderStore: ExpandedGuildFolderStore = /* @__PURE__ */ Finder.byName("ExpandedGuildFolderStore");
+export const ExpandedGuildFolderStore: ExpandedGuildFolderStore =
+    /* @__PURE__ */ Finder.byName("ExpandedGuildFolderStore");

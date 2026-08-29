@@ -1,4 +1,4 @@
-import {Finder, Filters} from "../api";
+import { Filters } from "../api";
 
 export interface SelectOption<T> {
     label: React.ReactNode;
@@ -32,17 +32,21 @@ export interface SelectProps<T, O extends SelectOption<T>> {
     "aria-labelledby"?: any;
 }
 
-export interface SingleSelectProps<T, O extends SelectOption<T>> extends Omit<SelectProps<T, O>, "select" | "isSelected" | "clear"> {
+export type Select = <T, O extends SelectOption<T>>(props: SelectProps<T, O>) => React.JSX.Element;
+
+export interface SingleSelectProps<T, O extends SelectOption<T>> extends Omit<
+    SelectProps<T, O>,
+    "select" | "isSelected" | "clear"
+> {
     value: T;
     onChange?: (value: T) => void;
 }
 
-interface SelectComponents {
-    Select: <T, O extends SelectOption<T>>(props: SelectProps<T, O>) => React.JSX.Element;
-    SingleSelect: <T, O extends SelectOption<T>>(props: SingleSelectProps<T, O>) => React.JSX.Element;
-}
+export type SingleSelect = <T, O extends SelectOption<T>>(props: SingleSelectProps<T, O>) => React.JSX.Element;
 
-export const {Select, SingleSelect}: SelectComponents = /* @__PURE */ Finder.demangle({
-    Select: Filters.bySource("renderOptionLabel:", "renderOptionValue:", "popoutWidth:"),
-    SingleSelect: Filters.bySource((source) => /{value:[a-zA-Z_$],onChange:[a-zA-Z_$]}/.test(source))
-}, ["Select"]);
+export const SingleSelectFilter: Filters.Filter = /* @__PURE */ Filters.bySource(
+    '"single"',
+    "isSelected",
+    "maxVisibleItems",
+    ".serialize",
+);

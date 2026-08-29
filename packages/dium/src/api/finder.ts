@@ -1,9 +1,11 @@
 import * as Filters from "./filters";
-import {mappedProxy} from "../utils/general";
-import type {Query, TypeOrPredicate} from "./filters";
-import type {Module, Exports} from "../require";
+import { mappedProxy } from "../utils/general";
+import type { Query, TypeOrPredicate } from "./filters";
+import type { Module, Exports } from "../require";
 
-export type Filter = (exports: Exports, module: Module, id: string) => boolean;
+export type ModuleFilter = (exports: Exports, module?: Module, id?: string) => boolean;
+
+export type Filter = ModuleFilter | Filters.Filter;
 
 export interface FindOptions {
     /** Whether to resolve the matching export or return the whole exports object. */
@@ -14,16 +16,18 @@ export interface FindOptions {
 }
 
 /** Finds a module using a set of filter functions. */
-export const find = (filter: Filter, {resolve = true, entries = false}: FindOptions = {}): any => BdApi.Webpack.getModule(filter, {
-    defaultExport: resolve,
-    searchExports: entries
-});
+export const find = (filter: Filter, { resolve = true, entries = false }: FindOptions = {}): any =>
+    BdApi.Webpack.getModule(filter, {
+        defaultExport: resolve,
+        searchExports: entries,
+    });
 
 /** Finds a module using query options. */
 export const query = (query: Query, options?: FindOptions): any => find(Filters.query(query), options);
 
 /** Finds a module using filters matching its entries. */
-export const byEntries = (...filters: Filter[]): any => find(Filters.join(...filters.map((filter) => Filters.byEntry(filter))));
+export const byEntries = (...filters: Filter[]): any =>
+    find(Filters.join(...filters.map((filter) => Filters.byEntry(filter))));
 
 /** Finds a module using the name of its export.  */
 export const byName = (name: string, options?: FindOptions): any => find(Filters.byName(name), options);
@@ -36,16 +40,18 @@ export const byKeys = (keys: string[], options?: FindOptions): any => find(Filte
 export const byProtos = (protos: string[], options?: FindOptions): any => find(Filters.byProtos(...protos), options);
 
 /** Finds a module using source code contents of its export entries. */
-export const bySource = (contents: TypeOrPredicate<string>[], options?: FindOptions): any => find(Filters.bySource(...contents), options);
+export const bySource = (contents: TypeOrPredicate<string>[], options?: FindOptions): any =>
+    find(Filters.bySource(...contents), options);
 
 /** Returns all module results. */
 export const all = {
     /** Finds all modules using a set of filter functions. */
-    find: (filter: Filter, {resolve = true, entries = false}: FindOptions = {}): any[] => BdApi.Webpack.getModule(filter, {
-        first: false,
-        defaultExport: resolve,
-        searchExports: entries
-    }) ?? [],
+    find: (filter: Filter, { resolve = true, entries = false }: FindOptions = {}): any[] =>
+        BdApi.Webpack.getModule(filter, {
+            first: false,
+            defaultExport: resolve,
+            searchExports: entries,
+        }) ?? [],
 
     /** Finds all modules using query options. */
     query: (query: Query, options?: FindOptions): any[] => all.find(Filters.query(query), options),
@@ -60,17 +66,22 @@ export const all = {
     byProtos: (protos: string[], options?: FindOptions): any[] => all.find(Filters.byProtos(...protos), options),
 
     /** Finds all modules using source code contents of its export entries. */
-    bySource: (contents: TypeOrPredicate<string>[], options?: FindOptions): any[] => all.find(Filters.bySource(...contents), options)
+    bySource: (contents: TypeOrPredicate<string>[], options?: FindOptions): any[] =>
+        all.find(Filters.bySource(...contents), options),
 };
 
 /** Resolves the key corresponding to the value matching the filter function. */
-export const resolveKey = <T>(target: T, filter: Filters.Filter): [T, string] => [target, Object.entries(target ?? {}).find(([, value]) => filter(value))?.[0]];
+export const resolveKey = <T, K extends string = string>(target: Record<K, T>, filter: Filter): [Record<K, T>, K] => [
+    target,
+    (target ? Object.entries(target).find(([, value]) => filter(value as any))?.[0] : null) as K,
+];
 
 /** Resolves the key corresponding to the value matching the filter function. */
-export const findWithKey = <T>(filter: Filters.Filter): [Record<string, T>, string] => resolveKey(find(Filters.byEntry(filter)), filter);
+export const findWithKey = <T, K extends string = string>(filter: Filter): [Record<K, T>, K] =>
+    resolveKey(find(Filters.byEntry(filter)), filter);
 
 type Mapping = Record<string, (entry: any) => boolean>;
-type Mapped<M extends Mapping> = {[K in keyof M]: any};
+type Mapped<M extends Mapping> = { [K in keyof M]: any };
 
 /**
  * Finds a module and demangles its export entries by applying filters.
@@ -83,31 +94,55 @@ type Mapped<M extends Mapping> = {[K in keyof M]: any};
 export const demangle = <M extends Mapping>(mapping: M, required?: (keyof M)[], proxy = false): Mapped<M> => {
     const req = required ?? Object.keys(mapping);
 
-    const found = find((target) => (
-        Filters.checkObjectValues(target)
-        && req.every((req) => Object.values(target).some((value) => mapping[req](value)))
-    ));
+    const found = find(
+        (target: any) =>
+            Filters.checkObjectValues(target)
+            && req.every((req) => Object.values(target).some((value) => mapping[req](value))),
+    );
 
-    return proxy ? mappedProxy(found, Object.fromEntries(Object.entries(mapping).map(([key, filter]) => [
-        key,
-        Object.entries(found ?? {}).find(([, value]) => filter(value))?.[0]
-    ]))) as any : Object.fromEntries(
-        Object.entries(mapping).map(([key, filter]) => [
-            key,
-            Object.values(found ?? {}).find((value) => filter(value))
-        ])
-    ) as any;
+    return proxy
+        ? (mappedProxy(
+              found,
+              Object.fromEntries(
+                  Object.entries(mapping).map(([key, filter]) => [
+                      key,
+                      Object.entries(found ?? {}).find(([, value]) => filter(value))?.[0] as any,
+                  ]),
+              ),
+          ) as any)
+        : (Object.fromEntries(
+              Object.entries(mapping).map(([key, filter]) => [
+                  key,
+                  Object.values(found ?? {}).find((value) => filter(value)),
+              ]),
+          ) as any);
 };
 
 let controller = new AbortController();
 
 /** Waits for a lazy loaded module. */
-// TODO: waitFor with callback that is skipped when aborted?
-export const waitFor = (filter: Filter, {resolve = true, entries = false}: FindOptions = {}): Promise<any> => BdApi.Webpack.waitForModule(filter, {
-    signal: controller.signal,
-    defaultExport: resolve,
-    searchExports: entries
-});
+export const waitFor = <T>(
+    filter: Filter,
+    { resolve = true, entries = false }: FindOptions = {},
+): Promise<T | undefined> =>
+    BdApi.Webpack.waitForModule(filter, {
+        signal: controller.signal,
+        defaultExport: resolve,
+        searchExports: entries,
+    });
+
+/** Waits for a lazy loaded module with abort checking. */
+export const waitForChecked = async <T, R>(
+    filter: Filter,
+    options: FindOptions = {},
+    callback: (result: T) => R,
+): Promise<R | undefined> => {
+    const signal = controller.signal;
+    const result = await waitFor<T>(filter, options);
+    if (!signal.aborted) {
+        return callback(result as T);
+    }
+};
 
 /** Aborts search for any lazy loaded modules. */
 export const abort = (): void => {
@@ -117,3 +152,7 @@ export const abort = (): void => {
     // new controller for future
     controller = new AbortController();
 };
+
+/** Finds a story module using class name prefixes. */
+export const byClassNames = (...classNames: string[]): Record<string, string> =>
+    find(Filters.byClassNames(...classNames), { entries: true });

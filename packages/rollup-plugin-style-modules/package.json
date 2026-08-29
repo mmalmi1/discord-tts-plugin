@@ -1,7 +1,8 @@
 {
     "name": "rollup-plugin-style-modules",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "author": "Zerthox",
+    "type": "module",
     "dependencies": {
         "lodash.camelcase": "^4.3.0",
         "postcss": "^8.4.21",

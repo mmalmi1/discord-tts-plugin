@@ -1,8 +1,8 @@
-import {Finder} from "../api";
-import {Embed as MessageEmbed} from "../modules/message";
+import { Finder } from "../api";
+import { Embed as MessageEmbed } from "../modules/message";
 
 export interface EmbedProps {
-    embed?: MessageEmbed;
+    embed: MessageEmbed;
     className?: string;
     allowFullScreen?: boolean;
     autoPlayGif?: boolean;
@@ -32,4 +32,4 @@ export interface Embed extends React.ComponentClass<EmbedProps, any> {
     };
 }
 
-export const Embed: Embed = /* @__PURE__ */ Finder.byProtos(["renderSuppressButton"], {entries: true});
+export const Embed: Embed = /* @__PURE__ */ Finder.byProtos(["renderSuppressButton"], { entries: true });

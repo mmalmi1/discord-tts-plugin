@@ -1,56 +1,41 @@
-import {Finder, Filters} from "../api";
+import { Finder } from "../api";
 
 export const enum TextInputSizes {
     DEFAULT = "default",
-    MINI = "mini"
+    MINI = "mini",
 }
 
 export interface TextInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "onChange"> {
-    value?: string;
+    disabled?: boolean;
+    editable?: boolean;
+    inputRef?: React.Ref<HTMLInputElement>;
+    focusProps?: any;
     name?: string;
     placeholder?: string;
+    maxLength?: number;
+    value?: string;
+    defaultValue?: string;
+    minLength?: number;
     error?: any;
-    minLength?: any;
-    maxLength?: any;
-    onChange?: (value: string) => void;
-    className?: string;
-    inputClassName?: string;
-    inputPrefix?: any;
-    disabled?: boolean;
+    defaultDirty?: boolean;
+    leading?: any;
+    trailing?: any;
+    validateOn?: any;
     size?: string;
-    editable?: boolean;
-    autoFocus?: boolean;
-    inputRef?: React.Ref<HTMLInputElement>;
-    prefixElement?: any;
-    focusProps?: any;
-    titleId?: any;
-    "aria-labelledby"?: any;
+    fullWidth?: boolean;
+    clearable?: boolean;
+    helperText?: string;
+    showCharacterCount?: boolean;
+    successMessage?: any;
+    onChange?: (value: string, name: string) => void;
 }
 
-export interface TextInput extends React.ComponentClass<TextInputProps, any> {
-    Sizes: typeof TextInputSizes;
-    contextType: React.Context<any>;
-    defaultProps: {
-        name: "";
-        size: "default";
-        disabled: false;
-        type: "text";
-        placeholder: "";
-        autoFocus: false;
-        maxLength: 999;
-    };
-}
-
-interface InputComponents {
-    TextInput: TextInput;
-    InputError: React.FunctionComponent<any>;
-}
-
-export const {TextInput, InputError}: InputComponents = /* @__PURE__ */ Finder.demangle({
-    TextInput: (target) => target?.defaultProps?.type === "text",
-    InputError: Filters.bySource("error:", "text-danger")
-} as const, ["TextInput"]);
+export const TextInput: React.ComponentClass<TextInputProps, any> = /* @__PURE__ */ Finder.bySource(
+    ["placeholder", "maxLength", "clearable"],
+    { entries: true },
+);
 
 export const ImageInput: React.ComponentClass<any> = /* @__PURE__ */ Finder.find(
-    (target) => typeof target.defaultProps?.multiple === "boolean" && typeof target.defaultProps?.maxFileSizeBytes === "number"
+    (target: any) =>
+        typeof target.defaultProps?.multiple === "boolean" && typeof target.defaultProps?.maxFileSizeBytes === "number",
 );

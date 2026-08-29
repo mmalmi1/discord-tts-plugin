@@ -19,8 +19,7 @@ export const SettingsPanel = (): React.JSX.Element => {
 
     return (
         <>
-            <FormItem className={margins.marginBottom20}>
-                <FormTitle>OpenAI API KEY</FormTitle>
+            <FormItem className={margins.marginBottom20} title="OpenAI API KEY">
                 <TextInput
                     value={openaiApiKey}
                     onChange={(value: string) => {
@@ -29,8 +28,7 @@ export const SettingsPanel = (): React.JSX.Element => {
                 />
             </FormItem>
             <FormDivider className={classNames(margins.marginTop20, margins.marginBottom20)}/>
-            <FormItem className={margins.marginBottom20}>
-                <FormTitle>Volume</FormTitle>
+            <FormItem className={margins.marginBottom20} title="Volume">
                 <Slider
                     initialValue={volume}
                     maxValue={100}

@@ -1,20 +1,20 @@
-import {describe, it} from "mocha";
-import {strict as assert} from "assert";
+import { describe, it } from "mocha";
+import { strict as assert } from "assert";
 import React from "react";
-import {createFiber} from "../mock";
+import { createFiber } from "../mock";
 
-import {Direction, Predicate, queryFiber, queryTree, queryTreeAll} from "../../src/utils/react";
-import type {Fiber} from "../../src/react-internals";
+import { Direction, Predicate, queryFiber, queryTree, queryTreeAll } from "../../src/utils/react";
+import type { Fiber } from "../../src/react-internals";
 
-const TestComponent = ({children}: {children: React.JSX.Element}): React.JSX.Element => children;
+const TestComponent = ({ children }: { children: React.JSX.Element }): React.JSX.Element => children;
 
 const elements = (
     <div className="foo">
         <TestComponent key={0}>
-            <span className="bar"/>
+            <span className="bar" />
         </TestComponent>
         <span key={1} className="baz">
-            <text/>
+            <text />
         </span>
     </div>
 );
@@ -28,7 +28,10 @@ describe("React element tree", () => {
         });
 
         it("finds the correct node", () => {
-            assert.equal(queryTree(tree, (node) => node.type === "span"), tree.props.children[1]);
+            assert.equal(
+                queryTree(tree, (node) => node.type === "span"),
+                tree.props.children[1],
+            );
         });
     });
 
@@ -40,7 +43,7 @@ describe("React element tree", () => {
         it("finds the correct nodes", () => {
             assert.deepEqual(
                 queryTreeAll(tree, (node) => node.type === "span"),
-                [tree.props.children[1], tree.props.children[0].props.children]
+                [tree.props.children[1], tree.props.children[0].props.children],
             );
         });
     });
@@ -48,15 +51,15 @@ describe("React element tree", () => {
 
 describe("React Fiber", () => {
     const root = createFiber(elements);
-    const parent = root.child;
-    const child = parent.child.child;
+    const parent = root.child as Fiber;
+    const child = (parent.child as Fiber).child as Fiber;
 
-    const deepRoot = {key: "0"} as Fiber;
+    const deepRoot = { key: "0" } as Fiber;
     let deepChild = deepRoot;
     for (let i = 1; i < 100; i++) {
         const child = {
             key: i.toString(),
-            return: deepChild
+            return: deepChild,
         } as Fiber;
         deepChild.child = child;
         deepChild = child;
@@ -65,7 +68,7 @@ describe("React Fiber", () => {
     const createTrackingPredicate = (): [Predicate<Fiber>, Set<number>] => {
         const calledOn = new Set<number>();
         const predicate = (node: Fiber) => {
-            calledOn.add(parseInt(node.key));
+            calledOn.add(parseInt(node.key ?? ""));
             return false;
         };
         return [predicate, calledOn];
@@ -77,7 +80,10 @@ describe("React Fiber", () => {
         });
 
         it("finds the correct node upwards", () => {
-            assert.equal(queryFiber(parent, (node) => node.type === "div", Direction.Up), parent);
+            assert.equal(
+                queryFiber(parent, (node) => node.type === "div", Direction.Up),
+                parent,
+            );
         });
 
         it("finds a result downwards", () => {
@@ -85,7 +91,10 @@ describe("React Fiber", () => {
         });
 
         it("finds the correct node downwards", () => {
-            assert.equal(queryFiber(parent, (node) => node.type === "span", Direction.Down), child);
+            assert.equal(
+                queryFiber(parent, (node) => node.type === "span", Direction.Down),
+                child,
+            );
         });
 
         it("stops after max depth upwards", () => {

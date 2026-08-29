@@ -11,29 +11,33 @@ export interface Query {
 }
 
 /** Joins multiple filters together. */
-export const join = <F extends (...args: any) => boolean>(...filters: F[]): F => {
-    return ((...args) => filters.every((filter) => filter(...args))) as any;
+export const join = <F extends (...args: any[]) => boolean>(...filters: F[]): F => {
+    return ((...args: any[]) => filters.every((filter) => filter(...args))) as any;
 };
 
 /** Creates a filter from query options. */
-export const query = ({filter, name, keys, protos, source}: Query): Filter => join(...[
-    ...[filter].flat(),
-    typeof name === "string" ? byName(name) : null,
-    keys instanceof Array ? byKeys(...keys) : null,
-    protos instanceof Array ? byProtos(...protos) : null,
-    source instanceof Array ? bySource(...source) : null
-].filter(Boolean));
+export const query = ({ filter, name, keys, protos, source }: Query): Filter => {
+    const filters = [
+        ...[filter].flat(),
+        typeof name === "string" ? byName(name) : null,
+        keys instanceof Array ? byKeys(...keys) : null,
+        protos instanceof Array ? byProtos(...protos) : null,
+        source instanceof Array ? bySource(...source) : null,
+    ].filter(Boolean) as Filter[];
+    return join(...filters);
+};
 
 /**
  * Determines whether values can be checked.
  *
  * This also skips checking values on `window` as well as directly exported prototypes.
  */
-export const checkObjectValues = (target: unknown): boolean => target !== window && target instanceof Object && target.constructor?.prototype !== target;
+export const checkObjectValues = (target: unknown): boolean =>
+    target !== window && target instanceof Object && target.constructor?.prototype !== target;
 
 /** Creates a filter matching on values in the exported object. */
 export const byEntry = <F extends (data: any, ...args: any) => boolean>(filter: F, every = false): F => {
-    return ((target, ...args) => {
+    return ((target: any, ...args: any) => {
         if (checkObjectValues(target)) {
             const values = Object.values(target);
             return values.length > 0 && values[every ? "every" : "some"]((value) => filter(value, ...args));
@@ -55,7 +59,10 @@ export const byKeys = (...keys: string[]): Filter => {
 
 /** Creates a filter searching by prototype names. */
 export const byProtos = (...protos: string[]): Filter => {
-    return (target) => target instanceof Object && target.prototype instanceof Object && protos.every((proto) => proto in target.prototype);
+    return (target) =>
+        target instanceof Object
+        && target.prototype instanceof Object
+        && protos.every((proto) => proto in target.prototype);
 };
 
 /**
@@ -75,13 +82,22 @@ export const bySource = (...fragments: TypeOrPredicate<string>[]): Filter => {
             const source = target.toString();
             const renderSource = (target.prototype as React.Component)?.render?.toString();
 
-            return fragments.every((fragment) => typeof fragment === "string" ? (
-                source.includes(fragment) || renderSource?.includes(fragment)
-            ) : (
-                fragment(source) || renderSource && fragment(renderSource)
-            ));
+            return fragments.every((fragment) =>
+                typeof fragment === "string"
+                    ? source.includes(fragment) || renderSource?.includes(fragment)
+                    : fragment(source) || (renderSource && fragment(renderSource)),
+            );
         } else {
             return false;
         }
     };
+};
+
+/** Creates a filter searching by class name prefixes. */
+export const byClassNames = (...classNames: string[]): Filter => {
+    return (target) =>
+        target instanceof Object
+        && classNames.every((prefix) =>
+            Object.values(target).some((value) => typeof value === "string" && value.startsWith(prefix)),
+        );
 };

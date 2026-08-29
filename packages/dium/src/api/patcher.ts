@@ -1,5 +1,5 @@
 import * as Logger from "./logger";
-import {getMeta} from "../meta";
+import { getMeta } from "../meta";
 
 /** Patcher options. */
 export interface Options {
@@ -8,6 +8,9 @@ export interface Options {
 
     /** Disable console output when patching. */
     silent?: boolean;
+
+    /** Force patch creation when target is not function. */
+    force?: boolean;
 
     /** Name of the patch target displayed in console output. */
     name?: string;
@@ -19,9 +22,8 @@ type Args<T> = T extends (...args: any) => any ? Parameters<T> : IArguments;
 
 type Return<T> = T extends (...args: any) => any ? ReturnType<T> : any;
 
-type This<T, P> = ThisParameterType<T> extends unknown ? (
-    P extends React.Component<any, any> ? P : any
-) : ThisParameterType<T>;
+type This<T, P> =
+    ThisParameterType<T> extends unknown ? (P extends React.Component<any, any> ? P : any) : ThisParameterType<T>;
 
 export interface PatchData<Original, Parent = any> {
     cancel: Cancel;
@@ -34,67 +36,83 @@ export interface PatchDataWithResult<Original, Parent = any> extends PatchData<O
     result: Return<Original>;
 }
 
-const patch = <Module, Key extends keyof Module>(
+interface PatchDataWithOptResult<Original, Parent = any> extends PatchData<Original, Parent> {
+    result?: Return<Original>;
+}
+
+type PatchCallback<Original, Parent = any> = (data: PatchDataWithOptResult<Original, Parent>) => unknown;
+
+/** Storage for manual patches. */
+let manualPatches: Cancel[] = [];
+
+/** Adds a manual patch. */
+export const addManual = (cancel: Cancel, name?: string): void => {
+    manualPatches.push(cancel);
+    if (name) {
+        Logger.log(`Patched ${name}`);
+    }
+};
+
+const patch = <Object, Key extends keyof Object>(
     type: "before" | "after" | "instead",
-    object: Module,
+    object: Object,
     method: Key,
-    callback: (cancel: Cancel, original: Module[Key], ...args: any) => any,
-    options: Options
+    callback: PatchCallback<Object[Key], Object>,
+    options: Options,
 ) => {
-    const original = object?.[method];
+    const original = object?.[method] as Object[Key];
+    const name = options.name ?? String(method);
     if (!(original instanceof Function)) {
-        throw TypeError(`patch target ${original} is not a function`);
+        if (options.force && !original) {
+            Logger.warn(`Forcing patch on ${name}`);
+            object[method] = function noop() {} as any;
+            addManual(() => {
+                object[method] = original;
+            });
+        } else {
+            throw TypeError(`patch target ${name} is ${original} not function`);
+        }
     }
 
-    const cancel = BdApi.Patcher[type](
+    const cancel: Cancel = BdApi.Patcher[type](
         getMeta().name,
         object,
         method,
-        options.once ? (...args: any) => {
-            const result = callback(cancel, original, ...args);
-            cancel();
-            return result;
-        } : (...args: any) => callback(cancel, original, ...args)
+        options.once
+            ? (context: any, args: any, result?: any) => {
+                  const newResult = callback({ cancel, original, context, args, result });
+                  cancel();
+                  return newResult;
+              }
+            : (context: any, args: any, result?: any) => callback({ cancel, original, context, args, result }),
     );
 
     if (!options.silent) {
-        Logger.log(`Patched ${options.name ?? String(method)}`);
+        Logger.log(`Patched ${name}`);
     }
 
     return cancel;
 };
 
 /** Patches the method, executing a callback **instead** of the original. */
-export const instead = <Module, Key extends keyof Module>(
-    object: Module,
+export const instead = <Object, Key extends keyof Object>(
+    object: Object,
     method: Key,
-    callback: (data: PatchData<Module[Key], Module>) => unknown,
-    options: Options = {}
-): Cancel => patch(
-    "instead",
-    object,
-    method,
-    (cancel, original, context, args) => callback({cancel, original, context, args}),
-    options
-);
+    callback: (data: PatchData<Object[Key], Object>) => unknown,
+    options: Options = {},
+): Cancel => patch("instead", object, method, callback, options);
 
 /**
  * Patches the method, executing a callback **before** the original.
  *
  * Typically used to modify arguments passed to the original.
  */
-export const before = <Module, Key extends keyof Module>(
-    object: Module,
+export const before = <Object, Key extends keyof Object>(
+    object: Object,
     method: Key,
-    callback: (data: PatchData<Module[Key], Module>) => unknown,
-    options: Options = {}
-): Cancel => patch(
-    "before",
-    object,
-    method,
-    (cancel, original, context, args) => callback({cancel, original, context, args}),
-    options
-);
+    callback: (data: PatchData<Object[Key], Object>) => unknown,
+    options: Options = {},
+): Cancel => patch("before", object, method, callback, options);
 
 /**
  * Patches the method, executing a callback **after** the original.
@@ -103,34 +121,30 @@ export const before = <Module, Key extends keyof Module>(
  *
  * Has access to the original method's return value via `result`.
  */
-export const after = <Module, Key extends keyof Module>(
-    object: Module,
+export const after = <Object, Key extends keyof Object>(
+    object: Object,
     method: Key,
-    callback: (data: PatchDataWithResult<Module[Key], Module>) => unknown,
-    options: Options = {}
-): Cancel => patch(
-    "after",
-    object,
-    method,
-    (cancel, original, context, args, result) => callback({cancel, original, context, args, result}),
-    options
-);
-
-/** Storage for context menu patches. */
-let menuPatches: Cancel[] = [];
+    callback: (data: PatchDataWithResult<Object[Key], Object>) => unknown,
+    options: Options = {},
+): Cancel => patch("after", object, method, callback as PatchCallback<Object[Key], Object>, options);
 
 /** Patches a context menu using its "navId". */
 export const contextMenu = (
     navId: string,
     callback: (result: React.JSX.Element) => React.JSX.Element | void,
-    options: Options = {}
+    options: Options = {},
 ): Cancel => {
-    const cancel = BdApi.ContextMenu.patch(navId, options.once ? (tree) => {
-        const result = callback(tree);
-        cancel();
-        return result;
-    } : callback);
-    menuPatches.push(cancel);
+    const cancel = BdApi.ContextMenu.patch(
+        navId,
+        options.once
+            ? (tree) => {
+                  const result = callback(tree);
+                  cancel();
+                  return result;
+              }
+            : callback,
+    );
+    manualPatches.push(cancel);
 
     if (!options.silent) {
         Logger.log(`Patched ${options.name ?? `"${navId}"`} context menu`);
@@ -141,12 +155,12 @@ export const contextMenu = (
 
 /** Reverts all patches done by this patcher. */
 export const unpatchAll = (): void => {
-    if (menuPatches.length + BdApi.Patcher.getPatchesByCaller(getMeta().name).length > 0) {
-        for (const cancel of menuPatches) {
+    if (manualPatches.length + BdApi.Patcher.getPatchesByCaller(getMeta().name).length > 0) {
+        BdApi.Patcher.unpatchAll(getMeta().name);
+        for (const cancel of manualPatches) {
             cancel();
         }
-        menuPatches = [];
-        BdApi.Patcher.unpatchAll(getMeta().name);
+        manualPatches = [];
         Logger.log("Unpatched all");
     }
 };
